@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chairman Election 2026 - Live Voting</title>
+    <!-- Tailwind CSS for modern, clean styling -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="bg-white shadow-xs border-b border-slate-200 py-6 text-center">
+        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Chairman Election 2026</h1>
+        <p class="text-slate-500 mt-1">Cast your ballot securely below. Results update in real-time.</p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-10 w-full flex-grow grid md:grid-cols-2 gap-8 items-start">
+        
+        <!-- Left: Voting Booth -->
+        <section class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200">
+            <h2 class="text-xl font-semibold text-slate-900 mb-4">Official Ballot</h2>
+            <div id="voted-alert" class="hidden mb-4 p-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg border border-emerald-200">
+                ✓ Thank you! Your vote has been recorded.
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Candidate 1 -->
+                <div class="p-4 border border-slate-200 rounded-xl flex items-center justify-between hover:border-blue-300 transition-colors">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">Alice Smith</h3>
+                        <p class="text-xs text-slate-500">VP of Corporate Strategy</p>
+                    </div>
+                    <button onclick="castVote('alice')" class="vote-btn bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors cursor-pointer">Vote</button>
+                </div>
+
+                <!-- Candidate 2 -->
+                <div class="p-4 border border-slate-200 rounded-xl flex items-center justify-between hover:border-blue-300 transition-colors">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">Bob Jones</h3>
+                        <p class="text-xs text-slate-500">Director of Operations</p>
+                    </div>
+                    <button onclick="castVote('bob')" class="vote-btn bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors cursor-pointer">Vote</button>
+                </div>
+
+                <!-- Candidate 3 -->
+                <div class="p-4 border border-slate-200 rounded-xl flex items-center justify-between hover:border-blue-300 transition-colors">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">Clara Vance</h3>
+                        <p class="text-xs text-slate-500">Head of Innovation</p>
+                    </div>
+                    <button onclick="castVote('clara')" class="vote-btn bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors cursor-pointer">Vote</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: Live Results -->
+        <section class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-slate-900">Live Standings</h2>
+                <span id="total-votes" class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full">0 Total Votes</span>
+            </div>
+
+            <div class="space-y-5">
+                <!-- Alice Chart -->
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="font-medium text-slate-700">Alice Smith</span>
+                        <span id="pct-alice" class="font-bold text-slate-900">0% (0)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-3">
+                        <div id="bar-alice" class="bg-blue-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Bob Chart -->
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="font-medium text-slate-700">Bob Jones</span>
+                        <span id="pct-bob" class="font-bold text-slate-900">0% (0)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-3">
+                        <div id="bar-bob" class="bg-indigo-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Clara Chart -->
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="font-medium text-slate-700">Clara Vance</span>
+                        <span id="pct-clara" class="font-bold text-slate-900">0% (0)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-3">
+                        <div id="bar-clara" class="bg-purple-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="resetElection()" class="mt-8 text-xs text-slate-400 hover:text-red-500 transition-colors block mx-auto underline cursor-pointer">
+                Reset Election Data
+            </button>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white text-center py-4 text-xs text-slate-400 border-t border-slate-100">
+        Secure Ballot System • Powered by LocalStorage
+    </footer>
+
+    <!-- Voting Logic Script -->
+    <script>
+        // Load initial data from LocalStorage or set defaults
+        let votes = JSON.parse(localStorage.getItem('chairman_votes')) || { alice: 0, bob: 0, clara: 0 };
+        let hasVoted = localStorage.getItem('has_voted') === 'true';
+
+        function updateUI() {
+            const total = votes.alice + votes.bob + votes.clara;
+            document.getElementById('total-votes').innerText = `${total} Total Votes`;
+
+            ['alice', 'bob', 'clara'].forEach(id => {
+                const count = votes[id];
+                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                
+                document.getElementById(`pct-${id}`).innerText = `${pct}% (${count})`;
+                document.getElementById(`bar-${id}`).style.width = `${pct}%`;
+            });
+
+            if (hasVoted) {
+                document.getElementById('voted-alert').classList.remove('hidden');
+                document.querySelectorAll('.vote-btn').forEach(btn => {
+                    btn.disabled = true;
+                    btn.classList.add('bg-slate-300', 'cursor-not-allowed');
+                    btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    btn.innerText = 'Voted';
+                });
+            } else {
+                document.getElementById('voted-alert').classList.add('hidden');
+                document.querySelectorAll('.vote-btn').forEach(btn => {
+                    btn.disabled = false;
+                    btn.classList.remove('bg-slate-300', 'cursor-not-allowed');
+                    btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    btn.innerText = 'Vote';
+                });
+            }
+        }
+
+        function castVote(candidate) {
+            if (hasVoted) return;
+            votes[candidate]++;
+            hasVoted = true;
+            localStorage.setItem('chairman_votes', JSON.stringify(votes));
+            localStorage.setItem('has_voted', 'true');
+            updateUI();
+        }
+
+        function resetElection() {
+            votes = { alice: 0, bob: 0, clara: 0 };
+            hasVoted = false;
+            localStorage.removeItem('chairman_votes');
+            localStorage.removeItem('has_voted');
+            updateUI();
+        }
+
+        // Initialize display on load
+        updateUI();
+    </script>
+</body>
+</html>
